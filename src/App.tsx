@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { exportSnapshot } from './exportSnapshot'
 import { calculateGeometry, formatInches } from './geometry'
 import { FRAME_PRESETS } from './presets'
@@ -13,6 +13,24 @@ type DimensionControlProps = {
   max: number
   step?: number
   onChange: (value: number) => void
+}
+
+type FrameOrientation = 'portrait' | 'landscape'
+
+const sizeKey = ({ width, height }: { width: number; height: number }) => `${Math.min(width, height)}x${Math.max(width, height)}`
+
+function orientPreset(preset: FramePreset, orientation: FrameOrientation): FramePreset {
+  const shortSide = Math.min(preset.width, preset.height)
+  const longSide = Math.max(preset.width, preset.height)
+  const width = shortSide === longSide || orientation === 'portrait' ? shortSide : longSide
+  const height = shortSide === longSide || orientation === 'portrait' ? longSide : shortSide
+  return {
+    ...preset,
+    id: `${preset.custom ? 'custom' : 'common'}-${shortSide}x${longSide}`,
+    name: `${width} × ${height} in${preset.custom ? ' — saved' : ''}`,
+    width,
+    height,
+  }
 }
 
 const DimensionControl = memo(function DimensionControl({ label, value, min = 0, max, step = 0.125, onChange }: DimensionControlProps) {
@@ -44,8 +62,10 @@ const FramePreview = memo(function FramePreview({ project }: { project: Project 
   const matY = Math.min(50, project.matVertical / project.frame.height * 100)
   const imageTransform = `translate(${project.artwork.offsetX}%, ${project.artwork.offsetY}%) scale(${project.artwork.zoom}) rotate(${project.artwork.rotation}deg)`
 
+  const previewStyle = { '--frame-ratio': outer.width / outer.height } as CSSProperties
+
   return (
-    <div className="preview-stage">
+    <div className="preview-stage" style={previewStyle}>
       <div className="measurement measurement-x"><span>{formatInches(outer.width)} overall</span></div>
       <div className="measurement measurement-y"><span>{formatInches(outer.height)} overall</span></div>
       <div className="frame-object" style={{ aspectRatio: `${outer.width} / ${outer.height}`, backgroundColor: project.frameColor }}>
@@ -75,13 +95,32 @@ function App() {
   const [customPresets, setCustomPresets] = useState<FramePreset[]>([])
   const [saveState, setSaveState] = useState<'loading' | 'saving' | 'saved' | 'error'>('loading')
   const [activePanel, setActivePanel] = useState<'artwork' | 'dimensions'>('dimensions')
+  const [frameOrientation, setFrameOrientationState] = useState<FrameOrientation>('landscape')
+  const [frameSearch, setFrameSearch] = useState('')
   const loaded = useRef(false)
   const geometry = useMemo(() => calculateGeometry(project), [project])
+  const customPresetExists = useMemo(() => customPresets.some((preset) => sizeKey(preset) === sizeKey(project.frame)), [customPresets, project.frame])
+  const displayedPresets = useMemo(() => {
+    const seen = new Set<string>()
+    const oriented: FramePreset[] = []
+    for (const preset of [...customPresets, ...FRAME_PRESETS]) {
+      const key = sizeKey(preset)
+      if (seen.has(key)) continue
+      seen.add(key)
+      oriented.push(orientPreset(preset, frameOrientation))
+    }
+    const query = frameSearch.toLowerCase().replace(/[×\s]/g, '').replace('in', '')
+    if (!query) return oriented
+    return oriented.filter((preset) => `${preset.width}x${preset.height}`.includes(query) || sizeKey(preset).includes(query) || preset.name.toLowerCase().includes(frameSearch.toLowerCase()))
+  }, [customPresets, frameOrientation, frameSearch])
 
   useEffect(() => {
     Promise.all([storage.getProjects(), storage.getPresets()]).then(([savedProjects, savedPresets]) => {
       const sorted = [...savedProjects].sort((a, b) => b.updatedAt - a.updatedAt)
-      if (sorted[0]) setProject(sorted[0])
+      if (sorted[0]) {
+        setProject(sorted[0])
+        if (sorted[0].frame.width !== sorted[0].frame.height) setFrameOrientationState(sorted[0].frame.width > sorted[0].frame.height ? 'landscape' : 'portrait')
+      }
       setProjects(sorted)
       setCustomPresets(savedPresets)
       setSaveState('saved')
@@ -117,6 +156,11 @@ function App() {
     setProject((current) => ({ ...current, frame: { ...current.frame, [key]: value } }))
   }, [])
 
+  useEffect(() => {
+    if (project.frame.width === project.frame.height) return
+    setFrameOrientationState(project.frame.width > project.frame.height ? 'landscape' : 'portrait')
+  }, [project.frame.height, project.frame.width])
+
   const patchArtwork = useCallback((key: keyof Project['artwork'], value: string | number | null) => {
     setProject((current) => ({ ...current, artwork: { ...current.artwork, [key]: value } }))
   }, [])
@@ -132,23 +176,51 @@ function App() {
   }
 
   const selectPreset = (id: string) => {
-    const preset = [...customPresets, ...FRAME_PRESETS].find((item) => item.id === id)
+    const preset = displayedPresets.find((item) => item.id === id)
     if (preset) patchProject({ frame: { width: preset.width, height: preset.height } })
   }
 
+  const setFrameOrientation = (orientation: FrameOrientation) => {
+    setFrameOrientationState(orientation)
+    setProject((current) => {
+      const currentOrientation = current.frame.width > current.frame.height ? 'landscape' : 'portrait'
+      if (current.frame.width === current.frame.height || currentOrientation === orientation) return current
+      return { ...current, frame: { width: current.frame.height, height: current.frame.width } }
+    })
+  }
+
+  const setMatOpening = (key: 'width' | 'height', value: number) => {
+    setProject((current) => {
+      if (key === 'width') {
+        const opening = Math.min(current.frame.width, Math.max(0, value))
+        return { ...current, matHorizontal: (current.frame.width - opening) / 2 }
+      }
+      const opening = Math.min(current.frame.height, Math.max(0, value))
+      return { ...current, matVertical: (current.frame.height - opening) / 2 }
+    })
+  }
+
   const saveCustomPreset = async () => {
+    if (customPresetExists) return
     const preset: FramePreset = {
-      id: `custom-${project.frame.width}-${project.frame.height}`,
+      id: `custom-${sizeKey(project.frame)}`,
       name: `${project.frame.width} × ${project.frame.height} in — saved`,
       width: project.frame.width,
       height: project.frame.height,
       custom: true,
     }
     await storage.savePreset(preset)
-    setCustomPresets((current) => [preset, ...current.filter((item) => item.id !== preset.id)])
+    setCustomPresets((current) => [preset, ...current.filter((item) => sizeKey(item) !== sizeKey(preset))])
   }
 
-  const newProject = () => setProject(createProject({ name: `Frame study ${projects.length + 1}` }))
+  const newProject = () => {
+    const next = createProject({ name: `Frame study ${projects.length + 1}` })
+    if (frameOrientation === 'portrait') {
+      next.frame = { width: next.frame.height, height: next.frame.width }
+      next.print = { width: next.print.height, height: next.print.width }
+    }
+    setProject(next)
+  }
   const duplicateProject = () => setProject(createProject({ ...project, id: crypto.randomUUID(), name: `${project.name} copy`, createdAt: Date.now(), updatedAt: Date.now() }))
   const deleteCurrentProject = async () => {
     if (!window.confirm(`Delete “${project.name}” from this browser?`)) return
@@ -166,7 +238,10 @@ function App() {
           <label className="project-name"><span>Project</span><input value={project.name} onChange={(event) => patchProject({ name: event.target.value })} /></label>
           <select aria-label="Open saved project" value={project.id} onChange={(event) => {
             const selected = projects.find((item) => item.id === event.target.value)
-            if (selected) setProject(selected)
+            if (selected) {
+              setProject(selected)
+              if (selected.frame.width !== selected.frame.height) setFrameOrientationState(selected.frame.width > selected.frame.height ? 'landscape' : 'portrait')
+            }
           }}>
             <option value={project.id}>Current project</option>
             {projects.filter((item) => item.id !== project.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
@@ -199,9 +274,14 @@ function App() {
               </section>
               <section className="control-section">
                 <div className="section-title"><span>FRAME</span><small>listed cavity size</small></div>
-                <select className="preset-select" defaultValue="" onChange={(event) => selectPreset(event.target.value)}><option value="" disabled>Choose a common or saved size…</option>{customPresets.length > 0 && <optgroup label="Your saved sizes">{customPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</optgroup>}<optgroup label="Common sizes — small to large">{FRAME_PRESETS.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</optgroup></select>
+                <div className="orientation-control" aria-label="Frame orientation">
+                  <button type="button" aria-pressed={frameOrientation === 'portrait'} onClick={() => setFrameOrientation('portrait')}>↕ Portrait</button>
+                  <button type="button" aria-pressed={frameOrientation === 'landscape'} onClick={() => setFrameOrientation('landscape')}>↔ Landscape</button>
+                </div>
+                <label className="preset-search"><span>Find a frame size</span><input type="search" value={frameSearch} placeholder="Try 14 × 20" onChange={(event) => setFrameSearch(event.target.value)} /></label>
+                <select className="preset-select" value="" onChange={(event) => selectPreset(event.target.value)}><option value="" disabled>{displayedPresets.length ? `Choose from ${displayedPresets.length} matching sizes…` : 'No matching sizes'}</option>{displayedPresets.map((preset) => <option key={preset.id} value={preset.id}>{preset.name}</option>)}</select>
                 <div className="control-grid"><DimensionControl label="Width" value={project.frame.width} max={60} onChange={(value) => patchFrame('width', value)} /><DimensionControl label="Height" value={project.frame.height} max={60} onChange={(value) => patchFrame('height', value)} /></div>
-                <button className="save-preset" onClick={() => void saveCustomPreset()}>+ Save this custom frame size</button>
+                <button className="save-preset" disabled={customPresetExists} onClick={() => void saveCustomPreset()}>{customPresetExists ? '✓ This custom size is already saved' : '+ Save this custom frame size'}</button>
               </section>
               <section className="control-section">
                 <div className="section-title"><span>FRAME FACE</span><small>visible moulding</small></div>
@@ -210,6 +290,12 @@ function App() {
               </section>
               <section className="control-section">
                 <div className="section-title"><span>MAT</span><small>overlays the print</small></div>
+                <div className="mat-opening-block">
+                  <div className="subsection-title"><span>WITH MAT OPENING</span><small>Amazon-style size</small></div>
+                  <p>Enter the advertised opening, such as 12 × 18 inside a 14 × 20 frame.</p>
+                  <div className="control-grid"><DimensionControl label="Opening width" value={geometry.matWindow.width} max={project.frame.width} onChange={(value) => setMatOpening('width', value)} /><DimensionControl label="Opening height" value={geometry.matWindow.height} max={project.frame.height} onChange={(value) => setMatOpening('height', value)} /></div>
+                </div>
+                <div className="subsection-title mat-width-title"><span>MAT BORDER WIDTHS</span><small>fine adjustment</small></div>
                 <div className="control-grid"><DimensionControl label="Left + right" value={project.matHorizontal} max={10} onChange={(value) => patchProject({ matHorizontal: value })} /><DimensionControl label="Top + bottom" value={project.matVertical} max={10} onChange={(value) => patchProject({ matVertical: value })} /></div>
                 <div className="color-row"><label>Mat color <input type="color" value={project.matColor} onChange={(event) => patchProject({ matColor: event.target.value })} /></label><output>{geometry.matWindow.width.toFixed(2)} × {geometry.matWindow.height.toFixed(2)} opening</output></div>
               </section>
@@ -226,7 +312,7 @@ function App() {
                   {project.artwork.dataUrl ? <img src={project.artwork.dataUrl} alt="Crop preview" style={{ transform: `translate(${project.artwork.offsetX}%, ${project.artwork.offsetY}%) scale(${project.artwork.zoom}) rotate(${project.artwork.rotation}deg)` }} /> : <div className="crop-empty">Upload a photo to crop it precisely.</div>}
                   <span className="crop-corner tl" /><span className="crop-corner tr" /><span className="crop-corner bl" /><span className="crop-corner br" />
                 </div>
-                <p className="crop-note">Zoom in and align the print edges with the crop boundary. The image always keeps its proportions.</p>
+                <p className="crop-note">At 1× the entire photo fits inside the crop boundary. Zoom in only when you want to remove edges; the image always keeps its proportions.</p>
               </div>
               <section className="control-section">
                 <DimensionControl label="Magnification" value={project.artwork.zoom} min={1} max={5} step={0.01} onChange={(value) => patchArtwork('zoom', value)} />

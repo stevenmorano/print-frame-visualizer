@@ -26,14 +26,14 @@ function drawDummy(ctx: CanvasRenderingContext2D, x: number, y: number, width: n
 
 function drawPreparedImage(ctx: CanvasRenderingContext2D, image: HTMLImageElement, project: Project, x: number, y: number, width: number, height: number) {
   const { zoom, offsetX, offsetY, rotation } = project.artwork
-  const cover = Math.max(width / image.naturalWidth, height / image.naturalHeight) * zoom
+  const fit = Math.min(width / image.naturalWidth, height / image.naturalHeight) * zoom
   ctx.save()
   ctx.beginPath()
   ctx.rect(x, y, width, height)
   ctx.clip()
   ctx.translate(x + width / 2 + width * offsetX / 100, y + height / 2 + height * offsetY / 100)
   ctx.rotate(rotation * Math.PI / 180)
-  ctx.scale(cover, cover)
+  ctx.scale(fit, fit)
   ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2)
   ctx.restore()
 }

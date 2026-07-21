@@ -8,10 +8,13 @@ Built for odd-size prints, the visualizer keeps artwork proportional while showi
 
 - Enter exact print dimensions, including fractional inches.
 - Choose from a broad range of common frame cavity sizes or enter a custom size.
-- Save custom frame sizes for reuse.
+- Switch between portrait and landscape frames; dimensions and preset results follow the selected orientation.
+- Search frame presets by size instead of scrolling through the full catalog.
+- Save custom frame sizes for reuse, with duplicate-size prevention.
 - Adjust visible frame-face width, plus paired left/right and top/bottom mat dimensions.
+- Enter an advertised "with mat" opening such as 12 x 18 inside a 14 x 20 frame; the app calculates the mat borders automatically.
 - Explore every dimension through precise inputs and real-time sliders.
-- Upload a photo of a print and position it with zoom, horizontal/vertical movement, and fine rotation.
+- Upload a photo of a print and position it with zoom, horizontal/vertical movement, and fine rotation. At 1x magnification, the complete photo is visible without automatic cropping.
 - See a true-proportion layered preview with mat overlap, visible-art dimensions, and fit warnings.
 - Save, reopen, duplicate, and delete projects locally in the browser.
 - Export a high-resolution annotated PNG with framing specifications for shopping or comparison.
@@ -21,10 +24,11 @@ Built for odd-size prints, the visualizer keeps artwork proportional while showi
 Retail frame listings such as `28 x 40 in` normally refer to the frame's glazing or art cavity, not its full outside dimensions. This app follows that convention:
 
 ```text
-listed frame cavity + visible frame face = overall outside size
+overall width  = listed cavity width  + (2 x frame-face width)
+overall height = listed cavity height + (2 x frame-face width)
 ```
 
-The mat sits inside the listed cavity and overlays the artwork. The preview reports the resulting mat opening and visible artwork area.
+The mat sits inside the listed cavity and overlays the artwork. You can enter either the border widths or the advertised opening size; both controls stay synchronized. The preview reports the resulting mat opening and visible artwork area.
 
 ## Privacy and storage
 

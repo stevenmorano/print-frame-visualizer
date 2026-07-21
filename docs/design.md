@@ -12,7 +12,11 @@ Steve's Tools: Print & Frame Visualizer is a private framing-planning tool for t
 - The user creates a browser-local project and enters print, frame, visible frame-face, and mat dimensions in inches.
 - Frame presets represent the retail listed cavity size. The visible frame face is added to calculate the overall outside size.
 - The print remains proportional at all times. The preview never stretches the uploaded artwork.
+- The complete uploaded photo is fitted inside the print boundary at 1x magnification. Zooming above 1x intentionally crops edges.
 - A mat is layered over the print. Left/right mat widths are linked, as are top/bottom widths.
+- Mat configuration supports both per-axis border widths and retail-style opening dimensions such as 12 x 18 within a 14 x 20 frame.
+- Portrait/landscape controls swap frame dimensions and present built-in or custom presets in the active orientation.
+- Presets can be searched by either dimension order. Custom sizes are normalized to prevent duplicate saved entries in opposite orientations.
 - The app reports the mat opening, visible artwork, overall outside dimensions, and potentially problematic configurations.
 - Users can upload an artwork photo, then zoom, position, and rotate it inside the print boundary.
 - Projects and custom frame presets persist in IndexedDB in the current browser.
@@ -51,11 +55,11 @@ The app uses a responsive editorial-workshop layout:
 
 - **Project bar:** rename, open, create, duplicate, delete, and local-save status.
 - **Live preview:** proportional frame, mat, and print layers with outer-dimension measurement rails.
-- **Dimensions panel:** exact number inputs, linked sliders, common/saved frame presets, colors, and fit information.
+- **Dimensions panel:** exact number inputs, linked sliders, searchable orientation-aware presets, mat opening/border controls, colors, and fit information.
 - **Artwork panel:** image selection, proportional crop positioning, magnification, and fine rotation.
 - **Snapshot export:** downloads an annotated PNG without editing controls.
 
-On desktop, the controls are beside the preview. On smaller screens, they stack below it with touch-sized controls.
+On desktop, the controls are beside the preview. On smaller screens, they stack below it with touch-sized controls. The preview width is constrained from its physical aspect ratio, so viewport height limits cannot distort the frame or produce uneven moulding widths.
 
 ## Decisions
 
@@ -65,6 +69,10 @@ On desktop, the controls are beside the preview. On smaller screens, they stack 
 | IndexedDB persistence | Keeps image-bearing projects private and local without an account or backend. |
 | Retail cavity dimensions | Matches how common frame sizes are advertised when shopping. |
 | Paired-axis mat controls | Matches the intended framing workflow while keeping controls understandable. |
+| Dual mat input model | Supports both framer-style border widths and retailer-style "with mat" opening dimensions. |
+| Orientation-normalized presets | Makes portrait/landscape switching predictable and prevents rotated duplicate custom sizes. |
+| Aspect-ratio constrained preview | Keeps the frame face physically uniform at every responsive viewport size. |
+| Contain-first artwork fitting | Makes 1x magnification show the entire source image; cropping is always intentional. |
 | Canvas PNG export | Creates a clean, portable comparison image with matching dimensions. |
 | Local font packages | Avoids a runtime Google Fonts request and supports offline use. |
 
@@ -80,3 +88,6 @@ On desktop, the controls are beside the preview. On smaller screens, they stack 
 - Unit tests cover outside-size, mat-overlap, and impossible-opening geometry cases.
 - ESLint, TypeScript type checking, Vitest, and a Vite production build pass.
 - Browser QA verified desktop and mobile layouts, project persistence behavior, custom frame presets, image upload, and PNG export without console errors or mobile horizontal overflow.
+- Image-fit QA used a real uploaded map and verified `contain` behavior in both the live preview and PNG export.
+- Responsive geometry QA verified uniform frame-face thickness at 1580, 1180, and 820 pixel viewport widths; the largest measured side-to-side variance was 0.03125 pixels.
+- Workflow QA verified a 12 x 18 opening calculates 1-inch borders inside a 14 x 20 frame, portrait/landscape dimension swapping, and orientation-aware `14x20` preset search.
