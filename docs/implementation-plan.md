@@ -15,6 +15,8 @@
 - [x] Added local image upload with proportional crop positioning, magnification, and fine rotation.
 - [x] Made 1x magnification fit the complete source photo consistently in the live preview and PNG export.
 - [x] Corrected responsive preview constraints so the frame aspect ratio and face thickness remain uniform at every viewport size.
+- [x] Added phone-friendly whole-inch and 1/8-inch fraction selectors synchronized with exact decimal inputs and enlarged sliders.
+- [x] Corrected artwork control units to use magnification, percentage, and degrees instead of inches.
 - [x] Added IndexedDB project persistence, autosave feedback, duplication, and guarded deletion.
 - [x] Added high-resolution annotated PNG snapshot downloads.
 - [x] Bundled local display/body fonts so the app has no runtime font dependency.
@@ -31,6 +33,7 @@
 | `npm audit --audit-level=high` | No high-severity vulnerabilities |
 | Browser QA | Passed: full-image upload/export, searchable presets, orientation swap, 12 x 18 mat opening, snapshot export, and desktop/mobile layout |
 | Responsive geometry | Passed at 1580, 1180, and 820 px widths; maximum frame-face variance 0.03125 px |
+| Mobile controls | Passed at 390 x 844 px: synchronized whole/fraction entry, 44-48 px touch targets, slider dragging, correct units, no overflow, and no console errors |
 
 ## Deferred work
 

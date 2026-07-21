@@ -13,7 +13,8 @@ Built for odd-size prints, the visualizer keeps artwork proportional while showi
 - Save custom frame sizes for reuse, with duplicate-size prevention.
 - Adjust visible frame-face width, plus paired left/right and top/bottom mat dimensions.
 - Enter an advertised "with mat" opening such as 12 x 18 inside a 14 x 20 frame; the app calculates the mat borders automatically.
-- Explore every dimension through precise inputs and real-time sliders.
+- Explore every dimension through precise decimal inputs and real-time sliders.
+- On phones, use large whole-inch and 1/8-inch fraction selectors alongside thumb-friendly sliders; all three input methods stay synchronized.
 - Upload a photo of a print and position it with zoom, horizontal/vertical movement, and fine rotation. At 1x magnification, the complete photo is visible without automatic cropping.
 - See a true-proportion layered preview with mat overlap, visible-art dimensions, and fit warnings.
 - Save, reopen, duplicate, and delete projects locally in the browser.
@@ -29,6 +30,8 @@ overall height = listed cavity height + (2 x frame-face width)
 ```
 
 The mat sits inside the listed cavity and overlays the artwork. You can enter either the border widths or the advertised opening size; both controls stay synchronized. The preview reports the resulting mat opening and visible artwork area.
+
+On mobile, physical measurements can be entered with either the exact decimal field or separate whole-inch and fraction selectors. Fractions are available in 1/8-inch steps. Artwork preparation uses its appropriate units: magnification (`x`), position (`%`), and rotation (`degrees`).
 
 ## Privacy and storage
 
