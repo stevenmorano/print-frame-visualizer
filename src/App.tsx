@@ -12,8 +12,12 @@ type DimensionControlProps = {
   min?: number
   max: number
   step?: number
+  unit?: string
+  mobileInchPicker?: boolean
   onChange: (value: number) => void
 }
+
+const INCH_FRACTIONS = ['0', '⅛', '¼', '⅜', '½', '⅝', '¾', '⅞']
 
 type FrameOrientation = 'portrait' | 'landscape'
 
@@ -33,17 +37,52 @@ function orientPreset(preset: FramePreset, orientation: FrameOrientation): Frame
   }
 }
 
-const DimensionControl = memo(function DimensionControl({ label, value, min = 0, max, step = 0.125, onChange }: DimensionControlProps) {
+const DimensionControl = memo(function DimensionControl({
+  label,
+  value,
+  min = 0,
+  max,
+  step = 0.125,
+  unit = 'in',
+  mobileInchPicker = true,
+  onChange,
+}: DimensionControlProps) {
   const sliderMax = Math.max(max, Math.ceil(value * 1.25))
+  const roundedEighths = Math.round(value * 8)
+  const selectedWhole = Math.floor(roundedEighths / 8)
+  const selectedFraction = ((roundedEighths % 8) + 8) % 8
+  const firstWhole = Math.max(0, Math.floor(min))
+  const lastWhole = Math.max(firstWhole, Math.ceil(sliderMax))
+  const wholeInches = Array.from({ length: lastWhole - firstWhole + 1 }, (_, index) => firstWhole + index)
+  const updateInches = (whole: number, fraction: number) => {
+    onChange(Math.min(max, Math.max(min, whole + fraction / 8)))
+  }
+
   return (
-    <label className="dimension-control">
+    <div className="dimension-control">
       <span className="control-label">{label}</span>
       <span className="number-wrap">
-        <input type="number" min={min} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-        <span>in</span>
+        <input aria-label={`${label} exact value`} inputMode="decimal" type="number" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <span>{unit}</span>
       </span>
-      <input className="range" type="range" min={min} max={sliderMax} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-    </label>
+      <input aria-label={`${label} slider`} className="range" type="range" min={min} max={sliderMax} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      {mobileInchPicker && (
+        <span className="mobile-inch-picker">
+          <span className="mobile-select-field">
+            <span>Whole inches</span>
+            <select aria-label={`${label} whole inches`} value={selectedWhole} onChange={(event) => updateInches(Number(event.target.value), selectedFraction)}>
+              {wholeInches.map((whole) => <option key={whole} value={whole}>{whole}</option>)}
+            </select>
+          </span>
+          <span className="mobile-select-field">
+            <span>Fraction</span>
+            <select aria-label={`${label} inch fraction`} value={selectedFraction} onChange={(event) => updateInches(selectedWhole, Number(event.target.value))}>
+              {INCH_FRACTIONS.map((fraction, index) => <option key={fraction} value={index}>{fraction}</option>)}
+            </select>
+          </span>
+        </span>
+      )}
+    </div>
   )
 })
 
@@ -315,10 +354,10 @@ function App() {
                 <p className="crop-note">At 1× the entire photo fits inside the crop boundary. Zoom in only when you want to remove edges; the image always keeps its proportions.</p>
               </div>
               <section className="control-section">
-                <DimensionControl label="Magnification" value={project.artwork.zoom} min={1} max={5} step={0.01} onChange={(value) => patchArtwork('zoom', value)} />
-                <DimensionControl label="Move horizontally" value={project.artwork.offsetX} min={-50} max={50} step={1} onChange={(value) => patchArtwork('offsetX', value)} />
-                <DimensionControl label="Move vertically" value={project.artwork.offsetY} min={-50} max={50} step={1} onChange={(value) => patchArtwork('offsetY', value)} />
-                <DimensionControl label="Straighten / rotate" value={project.artwork.rotation} min={-180} max={180} step={0.25} onChange={(value) => patchArtwork('rotation', value)} />
+                <DimensionControl label="Magnification" value={project.artwork.zoom} min={1} max={5} step={0.01} unit="x" mobileInchPicker={false} onChange={(value) => patchArtwork('zoom', value)} />
+                <DimensionControl label="Move horizontally" value={project.artwork.offsetX} min={-50} max={50} step={1} unit="%" mobileInchPicker={false} onChange={(value) => patchArtwork('offsetX', value)} />
+                <DimensionControl label="Move vertically" value={project.artwork.offsetY} min={-50} max={50} step={1} unit="%" mobileInchPicker={false} onChange={(value) => patchArtwork('offsetY', value)} />
+                <DimensionControl label="Straighten / rotate" value={project.artwork.rotation} min={-180} max={180} step={0.25} unit="°" mobileInchPicker={false} onChange={(value) => patchArtwork('rotation', value)} />
                 <button className="reset-crop" onClick={() => setProject((current) => ({ ...current, artwork: { ...current.artwork, zoom: 1, offsetX: 0, offsetY: 0, rotation: 0 } }))}>Reset crop</button>
               </section>
             </div>
