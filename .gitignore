@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+vite.stdout.log
+vite.stderr.log
+.env
+.env.*
+!.env.example
