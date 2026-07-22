@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Print and Frame Visualizer icon</title>
+  <desc id="desc">A black picture frame surrounding a cream mat and rust-red artwork.</desc>
+  <rect width="512" height="512" fill="#171714"/>
+  <path fill="#2b2a26" d="M56 56h400v400H56z"/>
+  <path fill="#0d0d0b" d="m56 56 38 38h324l38-38zM56 456l38-38h324l38 38z"/>
+  <path fill="#22211e" d="m56 56 38 38v324l-38 38zM456 56l-38 38v324l38 38z"/>
+  <rect x="94" y="94" width="324" height="324" fill="#eee9df"/>
+  <rect x="156" y="174" width="200" height="164" fill="#b7472f"/>
+  <path fill="#d7694f" d="M156 174h200v38H156z"/>
+  <circle cx="316" cy="214" r="18" fill="#171714"/>
+</svg>

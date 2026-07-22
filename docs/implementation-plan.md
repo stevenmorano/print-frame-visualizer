@@ -20,6 +20,7 @@
 - [x] Added IndexedDB project persistence, autosave feedback, duplication, and guarded deletion.
 - [x] Added high-resolution annotated PNG snapshot downloads.
 - [x] Bundled local display/body fonts so the app has no runtime font dependency.
+- [x] Added favicon, Apple touch icon, install manifest, theme metadata, and correct bookmark/Home Screen naming.
 - [x] Verified linting, types, unit tests, production build, security audit, and browser behavior at desktop and mobile sizes.
 
 ## Validation summary

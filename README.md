@@ -19,6 +19,7 @@ Built for odd-size prints, the visualizer keeps artwork proportional while showi
 - See a true-proportion layered preview with mat overlap, visible-art dimensions, and fit warnings.
 - Save, reopen, duplicate, and delete projects locally in the browser.
 - Export a high-resolution annotated PNG with framing specifications for shopping or comparison.
+- Add the deployed site to an iPhone Home Screen with its dedicated icon and concise `Print & Frame` app label.
 
 ## Measurement convention
 

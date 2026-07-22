@@ -59,8 +59,11 @@ The app uses a responsive editorial-workshop layout:
 - **Dimensions panel:** exact number inputs, linked sliders, searchable orientation-aware presets, mat opening/border controls, colors, and fit information.
 - **Artwork panel:** image selection, proportional crop positioning, magnification, and fine rotation.
 - **Snapshot export:** downloads an annotated PNG without editing controls.
+- **Installed identity:** a matching favicon, Apple touch icon, and web app manifest preserve the full website name while using `Print & Frame` as the compact Home Screen label.
 
 On desktop, the controls are beside the preview. On smaller screens, they stack below it in a single column. Measurement fields are at least 44 pixels tall, selectors and slider touch areas are 48 pixels tall, and slider handles grow to 30 pixels for reliable thumb input. The exact decimal field remains available with a 16-pixel font to invoke a mobile numeric keypad without browser zoom. The preview width is constrained from its physical aspect ratio, so viewport height limits cannot distort the frame or produce uneven moulding widths.
+
+The installed identity assumes the production app is deployed at the site root. Browser bookmarks retain the full `Steve's Tools: Print & Frame Visualizer` title, while iPhone Home Screen installation uses the shorter `Print & Frame` label. Standalone display metadata removes normal browser chrome when supported; it does not add offline caching, cloud sync, or a service worker.
 
 ## Decisions
 
@@ -77,6 +80,7 @@ On desktop, the controls are beside the preview. On smaller screens, they stack 
 | Synchronized mobile measurement inputs | Supports fast whole/fraction selection without sacrificing exact decimal entry or live slider adjustment. |
 | Canvas PNG export | Creates a clean, portable comparison image with matching dimensions. |
 | Local font packages | Avoids a runtime Google Fonts request and supports offline use. |
+| Vector-first app icon | Keeps the geometric frame mark crisp at favicon size and supplies deterministic raster sizes for iPhone and install metadata. |
 
 ## Boundaries and follow-up opportunities
 

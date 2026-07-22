@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "Steve's Tools: Print & Frame Visualizer",
+  "short_name": "Print & Frame",
+  "description": "Accurately visualize prints, mats, and frames before buying.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#eee9df",
+  "theme_color": "#171714",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
